@@ -1,6 +1,13 @@
 #include <stdio.h>
 #include "JavaCode.h"  // Required header for JNI
 
+// FORTRAN routines have to be prototyped as extern, and parameters are
+// passed by reference.  Note also that for g77 the function name in C
+// by
+// default must be prefixed by a "_".
+
+extern int sumsquaredf_(int *, int []);
+
 // When calling C code from Java, main() must be replaced by a declaration
 // similar to below, where the function name is given by "Java_" + the name
 // of the class in the Java code that calls this C code, in this case
@@ -23,14 +30,13 @@ JNIEXPORT jint JNICALL Java_JavaCode_sumsquaredc(JNIEnv *env,
     for (i=0; i<n; i++)
         printf("%2d %5d\n",i,a[i]);
 
+    printf("Call the FORTRAN code\n");
+
 //  The data are passed to the FORTRAN program, then the results are returned
 //  in a way similar to this.
 
-	for (i=0; i<n; i++)
-	{
-		a[i] = a[i] * a[i];
-		result += a[i];
-	}
+    result = sumsquaredf_(&n,a);
+    printf("-- We have now returned back to the C program --\n");
 
     printf("Print contents of array a[]\n");
     for (i=0; i<n; i++)
