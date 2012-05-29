@@ -1,26 +1,32 @@
 
+F90 = gfortran
+CC = gcc
+CFLAGS = -c -D_REENTRANT -fPIC -I/usr/lib/jvm/java-6-openjdk/include
+LDFLAGS = -lgfortran
+OBJECTS = CCode.o FortranCode.o
+
 all: libmycodeinc.so JavaCode.class
 
-libmycodeinc.so: CCode.o FortranCode.o
-	gcc -shared CCode.o FortranCode.o -lgfortran -o libmycodeinc.so
+libmycodeinc.so: $(OBJECTS)
+	$(CC) -shared $(LDFLAGS) $(OBJECTS) -o $@
 
-CCode.o: CCode.c JavaCode.h
-	gcc -c -D_REENTRANT -fPIC -I/usr/lib/jvm/java-6-openjdk/include -c CCode.c
+%.o: %.c JavaCode.h
+	$(CC) $(CFLAGS) -c $< -o $@
 
 FortranCode.o: FortranCode.f
-	gfortran -c FortranCode.f
+	$(F90) -c $< -o $@
 
 JavaCode.h: JavaCode.class
-	javah -jni JavaCode
+	javah -jni -o $@ JavaCode
 
-JavaCode.class: JavaCode.java
-	javac JavaCode.java
+%.class: %.java
+	javac $<
 
 run: libmycodeinc.so JavaCode.class
 	java -Djava.library.path=`pwd` JavaCode
 
 clean:
-	rm -f JavaCode.h CCode.o FortranCode.o
+	rm -f JavaCode.h $(OBJECTS)
 
 distclean: clean
 	rm -f JavaCode.class libmycodeinc.so
